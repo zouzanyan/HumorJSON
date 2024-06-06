@@ -9,7 +9,7 @@ public class CharScanner {
     }
 
     // 获取下标对应的字符
-    public char nextChar(int pos){
+    public char nextChar(){
 
         // 判断越界
         if (pos > charArr.length){
@@ -19,6 +19,10 @@ public class CharScanner {
         int p = pos;
         pos++;
         return charArr[p];
+    }
+
+    public boolean hasMore(){
+        return pos < charArr.length;
     }
 
 }
