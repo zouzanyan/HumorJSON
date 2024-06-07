@@ -12,7 +12,7 @@ public class CharScanner {
     public char nextChar(){
 
         // 判断越界
-        if (pos > charArr.length-1){
+        if (!hasMore()){
             return (char) -1;
         }
 
