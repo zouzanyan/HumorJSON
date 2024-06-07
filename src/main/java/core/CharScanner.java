@@ -8,17 +8,27 @@ public class CharScanner {
         charArr = jsonString.toCharArray();
     }
 
-    // 获取下标对应的字符
+    // 获取下标对应的字符，并向后移动指针
     public char nextChar(){
 
         // 判断越界
-        if (pos > charArr.length){
+        if (pos > charArr.length-1){
             return (char) -1;
         }
 
         int p = pos;
         pos++;
         return charArr[p];
+    }
+
+    // 向前移动指针，获取下标对应的值
+    public char peekChar(){
+        // 判断越界
+        if (pos < 0){
+            return (char) -1;
+        }
+        pos--;
+        return charArr[pos];
     }
 
     public boolean hasMore(){
