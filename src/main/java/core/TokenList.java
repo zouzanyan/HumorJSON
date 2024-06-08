@@ -1,5 +1,8 @@
 package core;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -8,6 +11,9 @@ public class TokenList {
 
     private List<Token> tokens = new ArrayList<>();
     private CharScanner charScanner;
+
+    // permissive 宽容模式  strict 严格模式
+    private String checkMode = "permissive";
 
     // 记录当前指针位置
     private int pos = 0;
@@ -35,14 +41,16 @@ public class TokenList {
         charScanner = new CharScanner(jsonStr);
         while (charScanner.hasMore()) {
 
-            // 逐个字符扫描
+            // 如果是空格，换行符等等直接跳过
             char nextChar = charScanner.nextChar();
+            if (isWhiteSpace(nextChar)) {
+                continue;
+            }
 
             Token token = parseToken(nextChar);
             tokens.add(token);
-
-
         }
+        tokens.add(new Token(TokenType.END_DOCUMENT, null));
         return tokens;
 
 
@@ -79,8 +87,9 @@ public class TokenList {
     private Token readNumber() {
         StringBuilder number = new StringBuilder();
         // 回退判断数字的首类型
-        char c = charScanner.peekChar();;
-        if (c == '-'){
+        char c = charScanner.peekChar();
+        ;
+        if (c == '-') {
             number.append(c);
             charScanner.nextChar();
         }
@@ -99,7 +108,7 @@ public class TokenList {
         }
 
         // 读取小数
-        if (c == '.'){
+        if (c == '.') {
             number.append(c);
             // 小数点后第一位不是数字异常
             c = charScanner.nextChar();
@@ -108,7 +117,7 @@ public class TokenList {
             }
             number.append(c);
 
-            while (isDigit(c = charScanner.nextChar())){
+            while (isDigit(c = charScanner.nextChar())) {
                 number.append(c);
             }
         }
@@ -139,44 +148,65 @@ public class TokenList {
     }
 
     private Token readString() {
+
+        if (checkMode == "permissive") {
+            return readPermissiveStringToken();
+        }
+        return parseStringToken();
+
+    }
+
+    // 通用解析,参考ECMA404标准
+    private Token parseStringToken() {
         StringBuilder stringBuilder = new StringBuilder();
-
-        while (true) {
-            char c = charScanner.nextChar();
-
-            /*  判断转义符号
-             *  TODO json标准对于字符串不支持直接解析\r \n \t之类的，fastjson开源库可以解析不报错，node.js中JSON.parse()不能解析报错
-             *   这里为了易用性支持直接解析
-             * */
+        char c;
+        while ((c = charScanner.nextChar()) != '\"') {
+            // 判断转义符号
             if (c == '\\') {
-                stringBuilder.append('\\');
+//                stringBuilder.append(c);
+
                 char nextChar = charScanner.nextChar();
-                if (nextChar == '"' || nextChar == '\\' || nextChar == 'r' || nextChar == 'n' || nextChar == 'b' || nextChar == 't' || nextChar == 'f') {
+                if (nextChar == '"' || nextChar == '\\' || nextChar == 'r' || nextChar == 'n' || nextChar == 'b' || nextChar == 't' || nextChar == 'f' || nextChar == '/') {
+                    stringBuilder.append(c);
                     stringBuilder.append(nextChar);
                 } else if (nextChar == 'u') {
-                    stringBuilder.append('u');
+                    // 处理unicode转义
+                    stringBuilder.append(nextChar);
                     for (int i = 0; i < 4; i++) {
-                        char ch = charScanner.nextChar();
-                        if (isHex(ch)) {
-                            stringBuilder.append(ch);
+                        c = charScanner.nextChar();
+                        // u后面连续4个字符必须是16进制
+                        if (isHex(c)) {
+                            stringBuilder.append(c);
                         } else {
                             throw new RuntimeException("Invalid character [\\u]");
                         }
                     }
                 } else {
-                    throw new RuntimeException("Invalid escape character");
+                    throw new RuntimeException("Invalid Escape Character");
                 }
-            } else if (c == '"') {
-                return new Token(TokenType.STRING, stringBuilder.toString());
+            } else if ((c = charScanner.nextChar()) == '\r' || (c = charScanner.nextChar()) == '\n') {
+                // JSON字符串不允许有未转义的 换行符 (\n) 或回车符 (\r)
+                throw new RuntimeException("Invalid escape character [\\r or \\n]");
             } else {
                 stringBuilder.append(c);
             }
-//            }else if(charScanner.nextChar() == '\r' | charScanner.nextChar() == '\n'){
-//                throw new RuntimeException("Invalid escape character [\\r or \\n]");
-//            }
+
         }
+        return new Token(TokenType.STRING, stringBuilder.toString());
+    }
+
+    // 宽容模式解析JSON String,用于一些JSON字符串不规范的解析
+    private Token readPermissiveStringToken() {
+
+        StringBuilder stringBuilder = new StringBuilder();
+        char c;
+        while ((c = charScanner.nextChar()) != '\"') {
+            stringBuilder.append(c);
+        }
+        return new Token(TokenType.STRING, stringBuilder.toString());
 
     }
+
 
     private boolean isHex(char ch) {
         return ((ch >= '0' && ch <= '9') || ('a' <= ch && ch <= 'f')
@@ -204,6 +234,10 @@ public class TokenList {
 
     }
 
+    private boolean isWhiteSpace(char ch) {
+        return (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n');
+    }
+
 }
 
 
@@ -211,7 +245,24 @@ class awdP {
     public static void main(String[] args) {
 
         TokenList tokenList = new TokenList();
-        List<Token> tokenizer = tokenList.tokenizer("0.12");
+        // name\q
+        List<Token> tokenizer = tokenList.tokenizer("\"name\\z\"");
         System.out.println(tokenizer);
+    }
+}
+
+class adjaw {
+    public static void main(String[] args) throws IOException {
+        FileInputStream fileInputStream = new FileInputStream("test.json");
+        int a;
+        StringBuilder stringBuilder = new StringBuilder();
+        while ((a = fileInputStream.read()) != -1) {
+            stringBuilder.append((char) a);
+        }
+        System.out.println(stringBuilder.toString());
+        List<Token> tokenizer = new TokenList().tokenizer(stringBuilder.toString());
+        for (int i = 0; i < tokenizer.size(); i++) {
+            System.out.println(tokenizer.get(i).getValue());
+        }
     }
 }
