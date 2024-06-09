@@ -240,29 +240,3 @@ public class TokenList {
 
 }
 
-
-class awdP {
-    public static void main(String[] args) {
-
-        TokenList tokenList = new TokenList();
-        // name\q
-        List<Token> tokenizer = tokenList.tokenizer("\"name\\z\"");
-        System.out.println(tokenizer);
-    }
-}
-
-class adjaw {
-    public static void main(String[] args) throws IOException {
-        FileInputStream fileInputStream = new FileInputStream("test.json");
-        int a;
-        StringBuilder stringBuilder = new StringBuilder();
-        while ((a = fileInputStream.read()) != -1) {
-            stringBuilder.append((char) a);
-        }
-        System.out.println(stringBuilder.toString());
-        List<Token> tokenizer = new TokenList().tokenizer(stringBuilder.toString());
-        for (int i = 0; i < tokenizer.size(); i++) {
-            System.out.println(tokenizer.get(i).getValue());
-        }
-    }
-}
