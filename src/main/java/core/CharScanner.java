@@ -15,19 +15,16 @@ public class CharScanner {
         if (!hasMore()){
             return (char) -1;
         }
-
-        int p = pos;
-        pos++;
-        return charArr[p];
+        return charArr[pos++];
     }
 
     // 向前移动指针，获取下标对应的值
     public char peekChar(){
+        pos--;
         // 判断越界
         if (pos < 0){
             return (char) -1;
         }
-        pos--;
         return charArr[pos];
     }
 
