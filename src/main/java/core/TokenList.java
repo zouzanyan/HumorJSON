@@ -26,6 +26,14 @@ public class TokenList {
         return tokens.get(pos++);
     }
 
+    public Token peekPrevious() {
+        return pos - 1 < 0 ? null : tokens.get(pos - 2);
+    }
+
+    public Token current(){
+        return tokens.get(pos);
+    }
+
     public boolean hasMore() {
         return pos < tokens.size();
     }

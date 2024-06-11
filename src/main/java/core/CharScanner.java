@@ -18,7 +18,7 @@ public class CharScanner {
         return charArr[pos++];
     }
 
-    // 向前移动指针，获取下标对应的值
+    // 向左移动指针，获取下标对应的值
     public char peekChar(){
         pos--;
         // 判断越界
