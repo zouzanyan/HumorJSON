@@ -62,7 +62,7 @@ public class Parser {
         JSONObject jsonObject = new JSONObject();
         String key = null;
         Object value;
-        // 预期是'String'或者'}'
+        // 第一个token预期只能是'String'或者'}'
         int expectCode = TokenType.STRING.getTokenCode() | TokenType.END_OBJECT.getTokenCode();
         while (tokens.hasMore()) {
             Token nextToken = tokens.next();
@@ -71,19 +71,39 @@ public class Parser {
             switch (tokenType) {
                 case STRING:
                     checkExpectToken(tokenType, expectCode);
-                    // 字符串的下一位
+                    // 获取当前的值但不向右移动指针
                     Token token = tokens.current();
                     // 作为键
                     if (token.getTokenType() == TokenType.SEP_COLON) {
                         key = token.getValue();
-                        expectCode = TokenType.SEP_COMMA.getTokenCode();
+                        // 期待':'
+                        expectCode = TokenType.SEP_COLON.getTokenCode();
                     } else {
                         // 作为值
                         value = token.getValue();
-                        jsonObject.put(key,value);
+                        jsonObject.put(key, value);
+                        // 期待 '}' 或者 ','
                         expectCode = TokenType.END_OBJECT.getTokenCode() | TokenType.SEP_COMMA.getTokenCode();
                     }
                     break;
+                case BEGIN_OBJECT:
+                    checkExpectToken(tokenType, expectCode);
+                    jsonObject.put(key, parseJSONObject());
+                    // 预期',' 或者 '}'
+                    expectCode = TokenType.SEP_COMMA.getTokenCode() | TokenType.END_OBJECT.getTokenCode();
+                    break;
+
+                case SEP_COLON:
+                    checkExpectToken(tokenType, expectCode);
+                    expectCode = TokenType.STRING.getTokenCode() |
+                            TokenType.NULL.getTokenCode() |
+                            TokenType.NUMBER.getTokenCode() |
+                            TokenType.BOOLEAN.getTokenCode() |
+                            TokenType.BEGIN_OBJECT.getTokenCode() |
+                            TokenType.BEGIN_ARRAY.getTokenCode();
+                    break;
+
+
             }
         }
 
