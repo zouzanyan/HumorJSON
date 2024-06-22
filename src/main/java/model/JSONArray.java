@@ -38,5 +38,10 @@ public class JSONArray{
     }
 
 
-
+    @Override
+    public String toString() {
+        return "JSONArray{" +
+                "list=" + list +
+                '}';
+    }
 }

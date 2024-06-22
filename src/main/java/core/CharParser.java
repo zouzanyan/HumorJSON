@@ -1,13 +1,9 @@
 package core;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-public class TokenList {
+public class CharParser {
 
     private List<Token> tokens = new ArrayList<>();
     private CharScanner charScanner;
@@ -30,7 +26,7 @@ public class TokenList {
         return pos - 1 < 0 ? null : tokens.get(pos - 2);
     }
 
-    public Token current(){
+    public Token current() {
         return tokens.get(pos);
     }
 
@@ -40,9 +36,7 @@ public class TokenList {
 
     @Override
     public String toString() {
-        return "TokenList{" +
-                "tokens=" + tokens +
-                '}';
+        return "TokenList{" + "tokens=" + tokens + '}';
     }
 
     public List<Token> tokenizer(String jsonStr) {
@@ -58,7 +52,6 @@ public class TokenList {
             Token token = parseToken(nextChar);
             tokens.add(token);
         }
-        tokens.add(new Token(TokenType.END_DOCUMENT, null));
         return tokens;
 
 
@@ -96,7 +89,6 @@ public class TokenList {
         StringBuilder number = new StringBuilder();
         // 回退判断数字的首类型
         char c = charScanner.peekChar();
-        ;
         if (c == '-') {
             number.append(c);
             charScanner.nextChar();
@@ -148,6 +140,9 @@ public class TokenList {
                 number.append(c);
             }
         }
+
+        // 读完最后一个数字后需要把指针往左移动一次
+        charScanner.peekChar();
         return new Token(TokenType.NUMBER, number.toString());
     }
 
@@ -203,7 +198,7 @@ public class TokenList {
         return new Token(TokenType.STRING, stringBuilder.toString());
     }
 
-    // 宽容模式解析JSON String,用于一些JSON字符串不规范的解析
+    // 宽容模式解析JSON String,用于一些JSON 字符串不规范的解析
     private Token readPermissiveStringToken() {
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -217,19 +212,24 @@ public class TokenList {
 
 
     private boolean isHex(char ch) {
-        return ((ch >= '0' && ch <= '9') || ('a' <= ch && ch <= 'f')
-                || ('A' <= ch && ch <= 'F'));
+        return ((ch >= '0' && ch <= '9') || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F'));
     }
 
     private Token readBoolean() {
-        if (charScanner.nextChar() == 'r' & charScanner.nextChar() == 'u' & charScanner.nextChar() == 'e') {
-            return new Token(TokenType.BOOLEAN, "true");
-        } else if (charScanner.nextChar() == 'a' & charScanner.nextChar() == 'l' & charScanner.nextChar() == 's' & charScanner.nextChar() == 'e') {
-            return new Token(TokenType.BOOLEAN, "false");
+        if (charScanner.peekChar() == 't') {
+            if (charScanner.nextChar() == 't' && charScanner.nextChar() == 'r' && charScanner.nextChar() == 'u' && charScanner.nextChar() == 'e') {
+                return new Token(TokenType.BOOLEAN, "true");
+            } else {
+                throw new RuntimeException("Valid boolean true");
+            }
         } else {
-            throw new RuntimeException("Invalid json string [boolean]");
-        }
+            if (charScanner.nextChar() == 'f' &&charScanner.nextChar() == 'a' && charScanner.nextChar() == 'l' && charScanner.nextChar() == 's' && charScanner.nextChar() == 'e') {
+                return new Token(TokenType.BOOLEAN, "false");
+            } else {
+                throw new RuntimeException("Valid boolean false");
+            }
 
+        }
     }
 
     private Token readNull() {

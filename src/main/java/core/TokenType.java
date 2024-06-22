@@ -33,8 +33,7 @@ public enum TokenType {
     STRING(64),
     BOOLEAN(128),
     SEP_COLON(256),
-    SEP_COMMA(512),
-    END_DOCUMENT(1024);
+    SEP_COMMA(512);
 
     private final int code;
 

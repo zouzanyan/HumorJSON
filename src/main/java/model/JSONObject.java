@@ -46,4 +46,11 @@ public class JSONObject {
 
         return (JSONArray) obj;
     }
+
+    @Override
+    public String toString() {
+        return "JSONObject{" +
+                "map=" + map +
+                '}';
+    }
 }
