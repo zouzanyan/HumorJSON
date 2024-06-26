@@ -4,12 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CharParser {
+    public void setCheckMode(String checkMode) {
+        this.checkMode = checkMode;
+    }
 
-    private List<Token> tokens = new ArrayList<>();
+    private final List<Token> tokens = new ArrayList<>();
     private CharScanner charScanner;
 
     // permissive 宽容模式  strict 严格模式
-    private String checkMode = "permissive";
+    private String checkMode = "strict";
 
     // 记录当前指针位置
     private int pos = 0;
@@ -103,7 +106,7 @@ public class CharParser {
 
 
         // 读取整数部分的剩余数字
-        while (isDigit((c = charScanner.nextChar()))) {
+        while (isDigit(c = charScanner.nextChar())) {
             number.append(c);
         }
 
@@ -141,6 +144,12 @@ public class CharParser {
             }
         }
 
+        // c应该是,或者}或者],若为-1说明数字后面结构未闭合
+        if (c == (char) -1){
+
+            return new Token(TokenType.NUMBER, number.toString());
+        }
+
         // 读完最后一个数字后需要把指针往左移动一次
         charScanner.peekChar();
         return new Token(TokenType.NUMBER, number.toString());
@@ -152,7 +161,7 @@ public class CharParser {
 
     private Token readString() {
 
-        if (checkMode == "permissive") {
+        if ("permissive".equals(checkMode)) {
             return readPermissiveStringToken();
         }
         return parseStringToken();
@@ -187,10 +196,14 @@ public class CharParser {
                 } else {
                     throw new RuntimeException("Invalid Escape Character");
                 }
-            } else if ((c = charScanner.nextChar()) == '\r' || (c = charScanner.nextChar()) == '\n') {
+            } else if (c == '\r' || c == '\n') {
                 // JSON字符串不允许有未转义的 换行符 (\n) 或回车符 (\r)
                 throw new RuntimeException("Invalid escape character [\\r or \\n]");
             } else {
+//                // 越界了,字符串没遇到右"闭合
+//                if (c == (char) -1){
+//                    throw  new RuntimeException("String Format Invalid");
+//                }
                 stringBuilder.append(c);
             }
 
@@ -204,6 +217,10 @@ public class CharParser {
         StringBuilder stringBuilder = new StringBuilder();
         char c;
         while ((c = charScanner.nextChar()) != '\"') {
+            // 越界了,字符串没遇到右"闭合
+            if (c == (char) -1){
+                throw  new RuntimeException("String Format Invalid");
+            }
             stringBuilder.append(c);
         }
         return new Token(TokenType.STRING, stringBuilder.toString());
@@ -223,7 +240,7 @@ public class CharParser {
                 throw new RuntimeException("Valid boolean true");
             }
         } else {
-            if (charScanner.nextChar() == 'f' &&charScanner.nextChar() == 'a' && charScanner.nextChar() == 'l' && charScanner.nextChar() == 's' && charScanner.nextChar() == 'e') {
+            if (charScanner.nextChar() == 'f' && charScanner.nextChar() == 'a' && charScanner.nextChar() == 'l' && charScanner.nextChar() == 's' && charScanner.nextChar() == 'e') {
                 return new Token(TokenType.BOOLEAN, "false");
             } else {
                 throw new RuntimeException("Valid boolean false");

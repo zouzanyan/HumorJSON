@@ -10,6 +10,10 @@ public class TokenParser {
 
     public Object parse(CharParser tokens) {
         this.tokens = tokens;
+        // 处理空字符串的情况
+        if (!tokens.hasMore()){
+            return "";
+        }
         Token nextToken = tokens.next();
         if (nextToken.getTokenType() == TokenType.BEGIN_OBJECT) {
             return parseJSONObject();
@@ -24,6 +28,11 @@ public class TokenParser {
     }
 
     private Object SingleValue(Token token) {
+
+        // 解析是但字符串但是不止一个token,说明了json格式有问题
+        if (tokens.hasMore()){
+            throw new RuntimeException("SingleValue Format Invalid");
+        }
 
         if (token.getTokenType() == TokenType.STRING) {
             return token.getValue();
