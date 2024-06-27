@@ -200,10 +200,10 @@ public class CharParser {
                 // JSON字符串不允许有未转义的 换行符 (\n) 或回车符 (\r)
                 throw new RuntimeException("Invalid escape character [\\r or \\n]");
             } else {
-//                // 越界了,字符串没遇到右"闭合
-//                if (c == (char) -1){
-//                    throw  new RuntimeException("String Format Invalid");
-//                }
+                // 越界了,字符串没遇到右"闭合
+                if (c == (char) -1){
+                    throw  new RuntimeException("String Format Invalid");
+                }
                 stringBuilder.append(c);
             }
 

@@ -64,7 +64,7 @@ class TestUnitTest {
 
     @Test
     public void adwad(){
-        Object parse = model.JSON.parse("\"sfdef\"");
+        Object parse = model.JSON.parse("\"sfdef");
         System.out.println(parse);
     }
 
