@@ -7,6 +7,10 @@ public class JSONArray{
 
     private final List<Object> list = new ArrayList<>();
 
+    public List<Object> getList() {
+        return list;
+    }
+
     public void add(Object obj) {
         list.add(obj);
     }

@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSON;
 import core.TokenParser;
 import core.Token;
 import core.CharParser;
+import model.JSONArray;
 import model.JSONObject;
 import org.junit.jupiter.api.Test;
 
@@ -64,8 +65,9 @@ class TestUnitTest {
 
     @Test
     public void adwad(){
-        Object parse = model.JSON.parse("\"sfdef");
-        System.out.println(parse);
+        JSONArray parse = model.JSON.parseJSONArray("[1,2]");
+        List<Object> list = parse.getList();
+        System.out.println(list);
     }
 
 

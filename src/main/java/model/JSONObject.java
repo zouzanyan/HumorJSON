@@ -9,6 +9,10 @@ public class JSONObject {
 
     private final Map<String, Object> map = new HashMap<>();
 
+    public Map<String, Object> getMap() {
+        return map;
+    }
+
     public void put(String key, Object value) {
         map.put(key, value);
     }
